@@ -1,16 +1,15 @@
 ---
 title: "Alternatives to Proof of Work"
 layout: post
-date: 2016-02-24 22:44
 image: /assets/images/markdown.jpg
 headerImage: false
 tag:
-- markdown
-- elements
-star: true
+- cryptography
+- cryptocurrencies
+star: false
 category: blog
-author: johndoe
-description: Markdown summary with different options
+author: matthewroseman
+description: Are there any useful alternatives to just pure Proof of Work in blockchain consensus
 ---
 ___
 
@@ -21,7 +20,7 @@ track of who has how many "coins". These ledgers are broken into blocks, each bl
 As of March 29, 2017 [the average number of transactions per block is about
 2000](https://blockchain.info/charts/n-transactions-per-block).
 
-![blockchain diagram]({{ site.url }}/assets/en-blockchain-overview.svg)
+![blockchain]({{ site.url }}/assets/images/bitcoin-block-chain-small.png)
 
 Now these blocks, before being commited to the chain, must be approved. Since there is no central authority, this must
 be done through a group consensus. Obviously there must be some way to hold people accountable to checking transactions
