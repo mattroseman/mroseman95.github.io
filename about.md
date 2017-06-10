@@ -36,7 +36,7 @@ about a wide array of topics, probably all related to software engineering.</p>
 
 <h2>Projects</h2>
 
-<ul>
+<ul class="project-list" style="column-count: 2;">
 	<li><a href="https://github.com/mroseman95/crypto-plugin">Crypto Chat</a></li>
 	<li><a href="https://github.com/mroseman95/twitch-meme-scraper">Twitch Scraper</a></li>
 	<li><a href="https://github.com/mroseman95/twitch-migration-tracker">Twitch Migration</a></li>
