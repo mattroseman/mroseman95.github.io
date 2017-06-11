@@ -9,10 +9,11 @@ tag:
 - cryptocurrencies
 star: false
 category: blog
-author: matthewroseman
+author: johndoe
 description: Are there any useful alternatives to just pure Proof of Work in blockchain consensus
 ---
-___
+
+---
 
 ## What is Blockchain Consensus
 
@@ -44,6 +45,8 @@ Many of the following consensus protocols are based off of this naive solution, 
 blocks, so that a single person can't freely create new identities. With this cost there must be some kind of award, in
 order to incentivize people to approve blocks. This reward is usually some of the networks cryptocurrencies, either
 taken from transaction fees, or created from scratch.
+
+---
 
 ## Proof of Work
 
