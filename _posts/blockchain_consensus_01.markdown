@@ -1,6 +1,7 @@
 ---
-title: "Alternatives to Proof of Work"
+title: "Alternatives to Proof of Work: Part 1"
 layout: post
+date: 2017-06-11 16:15
 image: /assets/images/markdown.jpg
 headerImage: false
 tag:
@@ -35,12 +36,14 @@ times
 
 The above is an example of what's called [Double Spending](https://en.wikipedia.org/wiki/Double-spending).
 
-An easy solution to this problem is to require a certain number of people to approve blocks. Although an easy attack
+A naive solution to this problem is to require a certain number of people to approve blocks. Although an easy attack
 would be to create many false identities, all of whom approve the block your transaction is in. This is called the
 [Sybil Attack](https://en.wikipedia.org/wiki/Sybil_attack).
 
 Many of the following consensus protocols are based off of this naive solution, but they add on a cost to approving
-blocks, so that a single person can't freely create new identities.
+blocks, so that a single person can't freely create new identities. With this cost there must be some kind of award, in
+order to incentivize people to approve blocks. This reward is usually some of the networks cryptocurrencies, either
+taken from transaction fees, or created from scratch.
 
 ## Proof of Work
 
@@ -74,80 +77,29 @@ Now your goal is to find a hash of this header, that is less than a certain targ
 change is the 32 bit nonce at the end. Normally you would start with a nonce of 0 and increment every try, but it
 doesn't really matter.
 
-Since SHA-256 is a trapdoor function, meaning you can't work backwards from a hash to a particular starting number, and
+Since SHA-256 is a one way function, meaning you can't work backwards from a hash to a particular starting number, and
 there is no way to predict what you are going to get until you calculate it, the only way to try and find a nonce that
 produces a hash below the target is by brute force. Once you do find a correct nonce that produces a hash below the
 target number, you can broadcast the block with the correct header, and receive your payment. 
 
-There must be some way to
-incetivize people to confirm that transactions are valid, and this is done by paying them in bitcoin every time they
-successfuly confirm a block.
+There must be some way to incetivize people to confirm that transactions are valid, and this is done by paying them in
+bitcoin every time they successfuly confirm a block. These bitcoins come from transaction fees, and are created out of
+thin air. This is how the network of bitcoin grows.
 
-Now the target value is a result of an algorithm based on previous blocks time to mine, and the goal is to mine a block
+The target value is a result of an algorithm based on previous blocks time to mine, and the goal is to mine a block
 every 10 minutes. So as computers get more powerful the target number can get smaller and smaller, making a successful
 hash harder and harder to find.
 
 ### Pros
+- So far proof of work has been the best method for preventing attacks on the blockchain, and many other algorithms
+   build off of proof of work, keeping the core details.
+- Proof of work is easily paralleled, meaning many people can work together at solving the hashing problems. This means
+   someone with not as many resources is able to participate.
+
 ### Cons
-
-## Proof of Stake
-### Overview
-### Pros
-### Cons
-
-## Proof of Burn
-### Overview
-### Pros
-### Cons
-
-
-A blockquote:
-
-> We are Hitchhikers in the road of open source knowledge.
-
-## Header 2
-
-Duis lacinia commodo dui, vel aliquam metus hendrerit eu. Integer et scelerisque dui. Sed nec molestie quam. Donec sit amet nisl a massa commodo ultrices nec quis nunc. Aenean aliquet eu arcu adipiscing dignissim. Nunc dictum elit vitae dolor molestie aliquet.
-
-
-Example code:
-
-{% highlight javascript %}
-var light = new Light();
-var switchUp = new FlipUpCommand(light);
-var switchDown = new FlipDownCommand(light);
-var s = new Switch();
-
-s.storeAndExecute(switchUp);
-s.storeAndExecute(switchDown);
-{% endhighlight %}
-
-
-A list:
-
-- Praesent nisi elit, bibendum ut consectetur ac, aliquet in nunc
-- Donec ante est, volutpat in mi et, pulvinar congue dolor.
-- Quisque ultrices pulvinar sollicitudin.
-- Duis elementum odio eu euismod suscipit.
-- Integer enim lorem, interdum sit amet consectetur non, bibendum eget neque.
-
-A numbered list:
-
-1. Praesent nisi elit, bibendum ut consectetur ac, aliquet in nunc.
-2. Donec ante est, volutpat in mi et, pulvinar congue dolor.
-3. Quisque ultrices pulvinar sollicitudin.
-4. Duis elementum odio eu euismod suscipit.
-5. Integer enim lorem, interdum sit amet consectetur non, bibendum eget neque.
-
-Definition list:
-
-Curabitur cursus magna eu sem cursus
-: ac ultrices urna pharetra.
-: Duis scelerisque ipsum eu luctus elementum.
-
-Pellentesque habitant morbi tristique senectus
-: Curabitur malesuada lacus ac gravida porttitor
-: Duis sodales feugiat lorem et mollis.
-
-Want to suggest something? Please [Send me a request](https://github.com/kronik3r/daktilo/issues/new).
-
+- With ASIC's (Application Specific Integrated Circuits) the cost of mining bitcoin is only viable with special
+   machines specifically designed to perform SHA256 hash calculations and nothing else. This increases the barrier of
+   entry into mining bitcoins.
+- Bitcoin mining has a very large energy footprint. There is a debate on whether the amount of
+   computational power going into mining bitcoin is a waste, some say there is nothing useful created from these hash
+   computations, while others say that the defence against Sybil attacks is something useful.
