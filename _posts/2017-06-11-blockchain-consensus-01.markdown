@@ -2,14 +2,14 @@
 title: "Alternatives to Proof of Work: Part 1"
 layout: post
 date: 2017-06-11 16:15
-image: /assets/images/markdown.jpg
-headerImage: false
+image: /assets/images/cryptocurrencies.jpg
+headerImage: true
 tag:
 - cryptography
 - cryptocurrencies
 star: false
 category: blog
-author: johndoe
+author: matthewroseman
 description: Are there any useful alternatives to just pure Proof of Work in blockchain consensus
 ---
 
