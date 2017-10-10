@@ -4,7 +4,7 @@ layout: page
 ---
 ![Profile Image]({{ site.url }}/{{ site.picture }})
 
-<p>I am a software engineer, recently graduated form Case Western Reserve University, and looking for a full time job.
+<p>I am a Freelance Software Engineer, recently graduated form Case Western Reserve University.
 </p>
 
 <p>I created this website to showcase my work, and to create a blog to help me learn new topics. I will be writting
