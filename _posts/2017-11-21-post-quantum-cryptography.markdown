@@ -106,4 +106,4 @@ so lattice based cryptography is considered safe to quantum attack.
 
 - [Beginning Paper on Post Quantum Cryptography](https://pqcrypto.org/www.springer.com/cda/content/document/cda_downloaddocument/9783540887010-c1.pdf)
 - [NIST report on Post Quantum Cryptography](http://nvlpubs.nist.gov/nistpubs/ir/2016/NIST.IR.8105.pdf)
-- [Lattic Based Cryptography](https://hal.inria.fr/hal-00828034/document)
+- [Lattic Based Cryptography](https://cims.nyu.edu/~regev/papers/pqc.pdf)
