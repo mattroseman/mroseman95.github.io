@@ -1,9 +1,9 @@
 # main text of home
 name: Matthew Roseman
-bio: Freelance Software Engineer. Work in Python, JavaScript (Node.js), and Golang.
+bio: Fullstack Software Engineer. Work in Python, JavaScript, and Golang.
 
 # twitter summary info
-description: A blog about technology and stuff related
+# description: A blog about technology and stuff related
 
 # if it's an external image, update below for true
 # better with square images

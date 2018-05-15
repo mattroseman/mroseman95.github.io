@@ -2,9 +2,8 @@
 title: About
 layout: page
 ---
-![Profile Image]({{ site.url }}/{{ site.picture }})
 
-<p>I am a Freelance Software Engineer, recently graduated form Case Western Reserve University.
+<p>I am a fullstack software engineer, using Python, JavaScript, and Golang. I am interested in open source projects
 </p>
 
 <p>I created this website to showcase my work, and to create a blog to help me learn new topics. I will be writting
