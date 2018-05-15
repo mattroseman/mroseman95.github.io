@@ -16,6 +16,11 @@ author: Matthew Roseman
 description: How to integrate Selenium into Scrapy to scrape dynamic web pages
 ---
 
+If you already know how to set up Scrapy and Selenium, skip to the [Integration](#integration) section to see how to
+integrate the two.
+
+The final code can be viewed [here](https://github.com/mroseman95/twitch-featured-scraper).
+
 ### Contents
 - [Overview](#overview)
 - [Scrapy](#scrapy)
@@ -24,11 +29,12 @@ description: How to integrate Selenium into Scrapy to scrape dynamic web pages
 
 ## Overview
 
-[Scrapy](https://scrapy.org/) is a python framework used for scraping websites, and [Selenium](https://www.seleniumhq.org/) is a tool that automates web browsers for testing
-purposes. Selenium was originally designed for testing purposes, but it is useful for much more.
+[Scrapy](https://scrapy.org/) is a python framework used for scraping websites, but a common problem is finding a way to get data off of a site
+that is dynamically loaded. Many websites will execute JavaScript in the client's browser, and that JavaScript will grab
+data for a webpage. Scrapy does not have the ability to execute this JavaScript.
 
-The goal is to combine Selenium and Scrapy so we can load a website in Selenium (executing any JavaScript), and then
-scrape it using the tools Scrapy gives us.
+[Selenium](https://www.seleniumhq.org/) is a tool that automates web browsers for testing purposes, but it can be used along with Scrapy to load all of
+a site's data whenever Scrapy sends a request.
 
 Lets say we want to scrape [Twitch](https://www.twitch.tv/) for the currently featured stream. There is probably a way to
 do it through the API, but lets pretend there isn't.
@@ -95,8 +101,6 @@ def parse(self, response):
     streamer = response.xpath('//p[@data-a-target="carousel-broadcaster-displayname"]/text()').extract()
     playing = response.xpath('//p[@data-a-target="carousel-user-playing-message"]/span/a/text()').extract()
 
-    print('\n\n{}: {}\n\n'.format(streamer, playing))
-
     yield {
         'streamer': streamer,
         'playing': playing
@@ -108,7 +112,7 @@ current game.
 
 For more information about how xpaths work, look at this [tutorial](https://www.w3schools.com/xml/xpath_intro.asp).
 
-To test our code we can run
+To test our code we can run...
 
 {% highlight bash %}
 scrapy crawl twitch-spider -o output.json
@@ -140,6 +144,9 @@ makes a request. It modifies the request/response in some way, and passes it bac
 This diagram explains the steps Scrapy takes.
 
 ![Scrapy Architecture]({{ site.url }}/assets/images/scrapy_architecture.png)
+
+We are going to be putting code right after step 4 that makes the request through Selenium, and then we'll pass back
+what Selenium loads as step 5.
 
 First we need to activate the downloader middleware class. Search **settings.py** for this code, and uncomment it.
 
@@ -180,15 +187,15 @@ return HtmlResponse(driver.current_url, body=body, encoding='utf-8', request=req
 {% endhighlight %}
 
 **process_request** is called anytime scrapy makes a request. The code we added tells Selenium to make the request to
-**https://www.twitch.tv/** throught the Chrome driver, get the page_source of the response, and then we return that as a
+**https://www.twitch.tv/** through the Chrome driver, get the page_source of the response, and then we return that as a
 Scrapy HtmlResponse.
 
 The code in Scrapy to make a request is unchanged, we are just making the request go through Selenium, and executing any
 dynamic content.
 
-Running scrapy now may or may not work. The reason is, is that Twitch has a lot of JavaScript to execute, in fact it is
-continuously executing JavaScript. Selenium only lets the page load for a certain time, and the data we want might not
-have loaded in time.
+Running Scrapy now will most likely work. It will output some json that contains the featured streamer's name and game.
+The reason it may not work is that Twitch has a lot of JavaScript to execute. In fact it is continuously executing
+JavaScript. Selenium only lets the page load for a certain time, and the data we want might not have loaded in time.
 
 One way to fix this is to tell Selenium to wait until the element we want is loaded.
 
@@ -219,11 +226,12 @@ def process_request(self, request, spider):
 We used the same xpath as before, and we told Selenium to wait until the element we are looking for is loaded, or if it
 hasn't after 10 seconds to throw an exception.
 
-It's important to note that Scrapy will make additional requests to robot.txt endpoints, and to make sure you are only
+It's important to note that Scrapy will make additional requests to a various endpoints, and to make sure you are only
 using Selenium on the actual request to twitch. This is done in the first lines of **process_request** where we check
 the request url.
 
-Having Selenium wait is not always necessary, it just depends on the sites you are scraping.
+Adding additional code to tell Selenium to wait is usually not necessary. It depends on how long the page you are
+scraping takes to load.
 
 Now if we run our code
 
@@ -239,10 +247,11 @@ and look in output.json, you should see something like this...
 ]
 ```
 
-## Conclusion
+## Alternatives
 
 If you would like to scrape your page using Selenium library, you could move the code from the downloader middleware to
-your spider, and manually make your requests there.
+your spider, and manually make your requests there. This may require some manipulation of how Scrapy handles requests so
+that you don't make two requests, one through Scrapy and one through Selenium.
 
 By putting it in your downloader middleware it lets you keep using
 Scrapy normally, and not have to worry about setting up Selenium for each spider.
