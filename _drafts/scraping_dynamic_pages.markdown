@@ -241,11 +241,11 @@ scrapy crawl twitch-spider -o output.json
 
 and look in output.json, you should see something like this...
 
-```
+{% highlight json %}
 [
 {"streamer": ["ForzaRC"], "playing": ["Forza Motorsport 7"]}
 ]
-```
+{% endhighlight %}
 
 ## Alternatives
 
