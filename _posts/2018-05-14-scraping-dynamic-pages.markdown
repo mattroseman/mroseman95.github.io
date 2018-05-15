@@ -1,7 +1,7 @@
 ---
 title: "Scraping Dynamic Pages with Scrapy + Selenium"
 layout: post
-date: 2018-05-09 19:30
+date: 2018-05-14 20:15
 image: /assets/images/markdown.jpg
 headerImage: false
 tag:
@@ -26,6 +26,7 @@ The final code can be viewed [here](https://github.com/mroseman95/twitch-feature
 - [Scrapy](#scrapy)
 - [Selenium](#selenium)
 - [Integration](#integration)
+- [Alternatives](#alternatives)
 
 ## Overview
 
