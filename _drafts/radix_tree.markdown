@@ -242,6 +242,160 @@ Now when the current node has an edge we can follow there are 4 scenarios.
   }
 {% endhighlight %}
 
+The easiest case is if the edge label and what's left of the word are exactly the same.
+
+{% highlight js %}
+        // if the edge label and what's left of the word are the same
+        if (edgeLabel === word.substr(i)) {
+          // update this child's data with the given data
+          currentNode.children[character].isWord = true;
+
+          return;
+        }
+{% endhighlight %}
+
+If the what's left of the word is all contained in the edge label, we just make a new word splitting up the edge label.
+
+{% highlight js %}
+        // if the edge label contains the entirety of what's left of the word plus some extra
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length == word.substr(i).length) {
+          // insert a new node (that's the new word) between the current node and the child, splitting up the edge label
+          const newNode = new RadixNode(word.substr(i), true);
+
+          // move the child so it's a child of the new node instead of the current node
+          newNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+
+          // make the edge label between the new node and it's child what's left of the edge label
+          newNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
+
+          // make the new node a child of current node
+          currentNode.children[character] = newNode;
+
+          return;
+        }
+{% endhighlight %}
+
+The complicated one, is if what's left of the word and the edge label share a common prefix, but both differ at some point.
+
+{% highlight js %}
+        // if the edge label and what's left of the word share a common prefix, but differ at some point
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length < word.substr(i).length) {
+          // insert a new inbetween node between current node and it's child, that will have children for the old child and a new node for the given word.
+          const inbetweenNode = new RadixNode(commonPrefix);
+
+          // move the child so it's a child of the inbetween node instead of the current node
+          inbetweenNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+
+          // make the edge label between the inbetween node and the child what's left of the edge label
+          inbetweenNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
+
+          // replace the child with the new inbetween node as a child of the current node
+          currentNode.children[character] = inbetweenNode;
+
+          // add what's left of the word as another child for the inbetween node
+          inbetweenNode.children[word.substr(i)[commonPrefix.length]] = new RadixNode(word.substr(i + commonPrefix.length), true);
+
+          return;
+        }
+{% endhighlight %}
+
+<div class="side-by-side">
+    <div class="toleft" style="width: 45%; padding-left: 40px;">
+        <img class="image" src="{{ site.url }}/assets/images/radix_insert_01.png" alt="Radix Insert Before" height="250">
+    </div>
+
+    <div class="toright" style="width: 45%;">
+        <img class="image" src="{{ site.url }}/assets/images/radix_insert_02.png" alt="Radix Insert After" height="250">
+    </div>
+</div>
+
+The last option is that the edge label is entirely contained in what's left of the word, so we just follow it and update the current node, taking off the edge labels characters from what's left of the word.
+
+{% highlight js %}
+        // the last option is what's left of the word contains the entirety of the edge label plus some extra
+        // follow the edge, and take off all the characters the edge has
+        i += edgeLabel.length - 1;
+        currentNode = currentNode.children[character];
+{% endhighlight %}
+
+Here is what the whole addWord function looks like.
+
+{% highlight js %}
+  addWord(word) {
+    word = word.toLowerCase();
+
+    let currentNode = this.root;
+
+    // iterate over the characters of the given word
+    for (let i = 0; i < word.length; i++) {
+      const currentCharacter = word[i];
+
+      // check to see if there is a child of the currentNode with an edge label starting with the currentCharacter
+      if (currentCharacter in currentNode.children) {
+        const edgeLabel = currentNode.children[currentCharacter].edgeLabel;
+
+        // get the common prefix of this child's edge label and what's left of the word
+        const commonPrefix = getCommonPrefix(edgeLabel, word.substr(i));
+
+        // if the edge label and what's left of the word are the same
+        if (edgeLabel === word.substr(i)) {
+          // update this child's data with the given data
+          currentNode.children[character].isWord = true;
+
+          return;
+        }
+
+        // if the edge label contains the entirety of what's left of the word plus some extra
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length == word.substr(i).length) {
+          // insert a new node (that's the new word) between the current node and the child, splitting up the edge label
+          const newNode = new RadixNode(word.substr(i), true);
+
+          // move the child so it's a child of the new node instead of the current node
+          newNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+
+          // make the edge label between the new node and it's child what's left of the edge label
+          newNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
+
+          // make the new node a child of current node
+          currentNode.children[character] = newNode;
+
+          return;
+        }
+
+        // if the edge label and what's left of the word share a common prefix, but differ at some point
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length < word.substr(i).length) {
+          // insert a new inbetween node between current node and it's child, that will have children for the old child and a new node for the given word.
+          const inbetweenNode = new RadixNode(commonPrefix);
+
+          // move the child so it's a child of the inbetween node instead of the current node
+          inbetweenNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+
+          // make the edge label between the inbetween node and the child what's left of the edge label
+          inbetweenNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
+
+          // replace the child with the new inbetween node as a child of the current node
+          currentNode.children[character] = inbetweenNode;
+
+          // add what's left of the word as another child for the inbetween node
+          inbetweenNode.children[word.substr(i)[commonPrefix.length]] = new RadixNode(word.substr(i + commonPrefix.length), true);
+
+          return;
+        }
+
+        // the last option is what's left of the word contains the entirety of the edge label plus some extra
+        // follow the edge, and take off all the characters the edge has
+        i += edgeLabel.length - 1;
+        currentNode = currentNode.children[character];
+      } else {
+        const newNode = new RadixNode(word.substr(i), true);
+        currentNode.children[currentCharacter] = newNode;
+
+        return;
+      }
+    }
+  }
+{% endhighlight %}
+
 ## Searching Words
 
 ## Event Loop Blocking
