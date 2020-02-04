@@ -67,7 +67,7 @@ child nodes that are marked as words. These will be the words that begin with th
 <div class="side-by-side">
     <div class="toleft" style="width: 60%;">
         <p>
-            A radix tree takes the prefix tree and optimizes it. There are a lot of unecessary nodes in a prefix tree. In the example above, there is no need for a 
+            A radix tree takes the prefix tree and optimizes it. There are a lot of unecessary nodes in a prefix tree. In the example above, there is no need for a
             <b>c</b> or an <b>a</b> node, and they can be combined into one node. That node would then have the two children <b>r</b> and <b>t</b>
         </p>
 
@@ -88,6 +88,159 @@ child nodes that are marked as words. These will be the words that begin with th
 </div>
 
 ## Adding Words
+
+I'll start with some skeleton code for the classes I'll use...
+
+{% highlight js %}
+class RadixNode {
+  constructor(edgeLabel, isWord=false) {
+    this.edgeLabel = edgeLabel;
+    this.children = {};
+
+    this.isWord = isWord;
+  }
+}
+
+class RadixTree {
+  constructor() {
+    this.root = new RadixNode('');
+  }
+
+  addWord(word) {
+  }
+
+  getWords(prefix) {
+  }
+}
+{% endhighlight %}
+
+Each node will be initialized with the edge label that leads to it, and it will have an object of all it's children.
+
+To make the code easier to write later, I'll store the children as a dictionary, with the key bing the first character of that child's edge label.
+
+Now let's figure out how the first word will be added
+
+{% highlight js %}
+  addWord(word) {
+    word = word.toLowerCase();
+
+    let currentNode = this.root;
+
+    // make a new node that's a word and has an edge label of the given word
+    const newNode = new RadixNode(word, true);
+    currentNode.children[word[0]] = newNode;
+  }
+{% endhighlight %}
+
+So we make a new RadixNode instance, with the given word, and make it a child of the root node.<br />
+The root node (currentNode) has a property children that we treat like a dictionary. We add a key **word[0]** which is the first character of the given word. We then set the value to the new node we made.
+
+So we now have a radix tree with two nodes and one word.
+
+Adding other words gets more complicated, because we need logic to split apart the existing nodes to make room for the new nodes.
+
+{% highlight js %}
+  addWord(word) {
+    word = word.toLowerCase();
+
+    let currentNode = this.root;
+
+    // iterate over the characters of the given word
+    for (let i = 0; i < word.length; i++) {
+      const currentCharacter = word[i];
+
+      // check to see if there is a child of the currentNode with an edge label starting with the currentCharacter
+      if (currentCharacter in currentNode.children) {
+        // TODO add logic to move nodes around to make room for new node
+      } else {
+        const newNode = new RadixNode(word.substr(i), true);
+        currentNode.children[currentCharacter] = newNode;
+
+        return;
+      }
+    }
+  }
+{% endhighlight %}
+
+We now iterate over each character of the given word, and check to see if that character is the beginning of one of the current nodes edges.
+
+If there isn't an edge that matches, we simply create a new child node, and make the edge label the remaining characters of the given word.
+
+For the complicated part we'll need a helper function to get the common prefix between two strings.
+
+{% highlight js %}
+/*
+ * getCommonPrefix calculates the largest common prefix of two given strings
+ */
+function getCommonPrefix(a, b) {
+  let commonPrefix = '';
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] !== b[i]) {
+      return commonPrefix;
+    }
+
+    commonPrefix += a[i];
+  }
+
+  return commonPrefix;
+}
+{% endhighlight %}
+
+Add this function outside of both classes.
+
+Now when the current node has an edge we can follow there are 4 scenarios.
+
+1. The edge label is exactly the same as what's left of the word.
+2. The edge label contains all of what's left of the word plus some extra. (edge label is **facebook** and the word is **face**)
+3. The word contains all of the edge label plus some extra. (edge label is **face** and the word is **facebook**)
+4. The edge label and the word share a common prefix, but both differ at some point. (edge label is **farm** and the word is **face**)
+
+{% highlight js %}
+  addWord(word) {
+    word = word.toLowerCase();
+
+    let currentNode = this.root;
+
+    // iterate over the characters of the given word
+    for (let i = 0; i < word.length; i++) {
+      const currentCharacter = word[i];
+
+      // check to see if there is a child of the currentNode with an edge label starting with the currentCharacter
+      if (currentCharacter in currentNode.children) {
+        const edgeLabel = currentNode.children[currentCharacter].edgeLabel;
+
+        // get the common prefix of this child's edge label and what's left of the word
+        const commonPrefix = getCommonPrefix(edgeLabel, word.substr(i));
+
+        // if the edge label and what's left of the word are the same
+        if (edgeLabel === word.substr(i)) {
+          // TODO add new node
+          return;
+        }
+
+        // if the edge label contains the entirety of what's left of the word plus some extra
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length == word.substr(i).length) {
+          // TODO add new node
+          return;
+        }
+
+        // if the edge label and what's left of the word share a common prefix, but differ at some point
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length < word.substr(i).length) {
+          // TODO add new node
+          return;
+        }
+
+        // the last option is what's left of the word contains the entirety of the edge label plus some extra
+        // TODO follow the edge label, and increment the for loop to take off all of the edge label characters
+      } else {
+        const newNode = new RadixNode(word.substr(i), true);
+        currentNode.children[currentCharacter] = newNode;
+
+        return;
+      }
+    }
+  }
+{% endhighlight %}
 
 ## Searching Words
 
