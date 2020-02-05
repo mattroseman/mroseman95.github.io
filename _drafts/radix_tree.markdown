@@ -219,7 +219,7 @@ Now when the current node has an edge we can follow there are 4 scenarios.
         }
 
         // if the edge label contains the entirety of what's left of the word plus some extra
-        if (commonPrefix.length < edgeLabel.length && commonPrefix.length == word.substr(i).length) {
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length === word.substr(i).length) {
           // TODO add new node
           return;
         }
@@ -248,7 +248,7 @@ The easiest case is if the edge label and what's left of the word are exactly th
         // if the edge label and what's left of the word are the same
         if (edgeLabel === word.substr(i)) {
           // update this child's data with the given data
-          currentNode.children[character].isWord = true;
+          currentNode.children[currentCharacter].isWord = true;
 
           return;
         }
@@ -263,13 +263,13 @@ If the what's left of the word is all contained in the edge label, we just make 
           const newNode = new RadixNode(word.substr(i), true);
 
           // move the child so it's a child of the new node instead of the current node
-          newNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+          newNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[currentCharacter]
 
           // make the edge label between the new node and it's child what's left of the edge label
           newNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
 
           // make the new node a child of current node
-          currentNode.children[character] = newNode;
+          currentNode.children[currentCharacter] = newNode;
 
           return;
         }
@@ -284,13 +284,13 @@ The complicated one, is if what's left of the word and the edge label share a co
           const inbetweenNode = new RadixNode(commonPrefix);
 
           // move the child so it's a child of the inbetween node instead of the current node
-          inbetweenNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+          inbetweenNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[currentCharacter]
 
           // make the edge label between the inbetween node and the child what's left of the edge label
           inbetweenNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
 
           // replace the child with the new inbetween node as a child of the current node
-          currentNode.children[character] = inbetweenNode;
+          currentNode.children[currentCharacter] = inbetweenNode;
 
           // add what's left of the word as another child for the inbetween node
           inbetweenNode.children[word.substr(i)[commonPrefix.length]] = new RadixNode(word.substr(i + commonPrefix.length), true);
@@ -315,7 +315,7 @@ The last option is that the edge label is entirely contained in what's left of t
         // the last option is what's left of the word contains the entirety of the edge label plus some extra
         // follow the edge, and take off all the characters the edge has
         i += edgeLabel.length - 1;
-        currentNode = currentNode.children[character];
+        currentNode = currentNode.children[currentCharacter];
 {% endhighlight %}
 
 Here is what the whole addWord function looks like.
@@ -340,7 +340,7 @@ Here is what the whole addWord function looks like.
         // if the edge label and what's left of the word are the same
         if (edgeLabel === word.substr(i)) {
           // update this child's data with the given data
-          currentNode.children[character].isWord = true;
+          currentNode.children[currentCharacter].isWord = true;
 
           return;
         }
@@ -351,13 +351,13 @@ Here is what the whole addWord function looks like.
           const newNode = new RadixNode(word.substr(i), true);
 
           // move the child so it's a child of the new node instead of the current node
-          newNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+          newNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[currentCharacter]
 
           // make the edge label between the new node and it's child what's left of the edge label
           newNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
 
           // make the new node a child of current node
-          currentNode.children[character] = newNode;
+          currentNode.children[currentCharacter] = newNode;
 
           return;
         }
@@ -368,13 +368,13 @@ Here is what the whole addWord function looks like.
           const inbetweenNode = new RadixNode(commonPrefix);
 
           // move the child so it's a child of the inbetween node instead of the current node
-          inbetweenNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[character]
+          inbetweenNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[currentCharacter]
 
           // make the edge label between the inbetween node and the child what's left of the edge label
           inbetweenNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
 
           // replace the child with the new inbetween node as a child of the current node
-          currentNode.children[character] = inbetweenNode;
+          currentNode.children[currentCharacter] = inbetweenNode;
 
           // add what's left of the word as another child for the inbetween node
           inbetweenNode.children[word.substr(i)[commonPrefix.length]] = new RadixNode(word.substr(i + commonPrefix.length), true);
@@ -385,7 +385,7 @@ Here is what the whole addWord function looks like.
         // the last option is what's left of the word contains the entirety of the edge label plus some extra
         // follow the edge, and take off all the characters the edge has
         i += edgeLabel.length - 1;
-        currentNode = currentNode.children[character];
+        currentNode = currentNode.children[currentCharacter];
       } else {
         const newNode = new RadixNode(word.substr(i), true);
         currentNode.children[currentCharacter] = newNode;
@@ -397,5 +397,150 @@ Here is what the whole addWord function looks like.
 {% endhighlight %}
 
 ## Searching Words
+
+Searching for words is much simpler than adding words. We traverse the tree finding edges that match
+a given prefix, and then perform a depth first search and the node we end on.
+
+{% highlight js %}
+  getWords(prefix) {
+    prefix = prefix.toLowerCase();
+
+    let currentNode = this.root;
+
+    // iterate over the characters of the given prefix, following the Radix Tree
+    // to find which node it ends at
+    for (let i = 0; i < prefix.length; i++) {
+      const character = prefix[i];
+
+      if (character in currentNode.children) {
+        const edgeLabel = currentNode.children[character].edgeLabel;
+        const commonPrefix = getCommonPrefix(edgeLabel, prefix.substr(i));
+
+        // if the commonPrefix doesn't match the edge label or what's left of the given prefix
+        // than what's left of the given prefix differs from the edgeLabel, and there aren't
+        // any words in the RadixTree that begin with it.
+        if (commonPrefix.length !== edgeLabel.length && commonPrefix.length !== prefix.substr(i).length) {
+          return [];
+        }
+
+        // increment i, taking off the edge label's characters
+        i += currentNode.children[character].edgeLabel.length - 1;
+        // update the current node to the selected child
+        currentNode = currentNode.children[character];
+      } else {
+        // if there isn't an edge label that begins with the next prefix character
+        // there are no words in the Radix tree that begin with the given prefix
+        return [];
+      }
+    }
+
+    // TODO DFS starting at current node to get all possible words with the given prefix
+    let words = [];
+
+    return words;
+  }
+{% endhighlight %}
+
+If we make it through traversing the tree, and making sure the edge label's match what's left of the prefix, Than we know there are some words in the tree that begin with the given prefix.
+
+Conveniently that currentNode variable happens to be at the root of the subtree that contains all
+those words, so we only need to do a depth first search to find them all.
+
+{% highlight js %}
+    // DFS starting at current node to get all possible words with the given prefix
+    let words = [];
+    function dfs(startingNode, prefix) {
+      // if we are currently visitng a node that's a word
+      if (startingNode.isWord) {
+        // append the given prefix to the running array of words
+        words.push(prefix);
+      }
+
+      // if there are no child nodes return
+      if (Object.keys(startingNode.children).length === 0) {
+        return;
+      }
+
+      // for each child of the given child node
+      for (const character of Object.keys(startingNode.children)) {
+        // recursively call dfs on each child, after concating that child's edge label with the given prefix
+        dfs(startingNode.children[character], prefix + startingNode.children[character].edgeLabel);
+      }
+    }
+
+    dfs(prefix);
+
+    return words;
+{% endhighlight %}
+
+Finally, We can make the getWords more efficient by making it asynchronous, since the order it finds words doesn't matter.
+
+The whole file then will look like.
+
+{% highlight js %}
+  async getWords(prefix) {
+    prefix = prefix.toLowerCase();
+
+    let currentNode = this.root;
+
+    // iterate over the characters of the given prefix, following the Radix Tree
+    // to find which node it ends at
+    for (let i = 0; i < prefix.length; i++) {
+      const character = prefix[i];
+
+      if (character in currentNode.children) {
+        const edgeLabel = currentNode.children[character].edgeLabel;
+        const commonPrefix = getCommonPrefix(edgeLabel, prefix.substr(i));
+
+        // if the commonPrefix doesn't match the edge label or what's left of the given prefix
+        // than what's left of the given prefix differs from the edgeLabel, and there aren't
+        // any words in the RadixTree that begin with it.
+        if (commonPrefix.length !== edgeLabel.length && commonPrefix.length !== prefix.substr(i).length) {
+          return [];
+        }
+
+        // increment i, taking off the edge label's characters
+        i += currentNode.children[character].edgeLabel.length - 1;
+        // update the current node to the selected child
+        currentNode = currentNode.children[character];
+      } else {
+        // if there isn't an edge label that begins with the next prefix character
+        // there are no words in the Radix tree that begin with the given prefix
+        return [];
+      }
+    }
+
+    // DFS starting at current node to get all possible words with the given prefix
+    let words = [];
+    async function dfs(startingNode, prefix) {
+      // if we are currently visitng a node that's a word
+      if (startingNode.isWord) {
+        // append the given prefix to the running array of words
+        words.push(prefix);
+      }
+
+      // if there are no child nodes return
+      if (Object.keys(startingNode.children).length === 0) {
+        return;
+      }
+
+      // for each child of the given child node
+      for (const character of Object.keys(startingNode.children)) {
+        // recursively call dfs on each child, after concating that child's edge label with the given prefix
+        await dfs(startingNode.children[character], prefix + startingNode.children[character].edgeLabel);
+      }
+    }
+
+    await dfs(prefix);
+
+    return words;
+  }
+}
+{% endhighlight %}
+
+And if we run it...
+
+{% highlight bash %}
+{% endhighlight %}
 
 ## Event Loop Blocking
