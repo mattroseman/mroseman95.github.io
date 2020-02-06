@@ -33,6 +33,8 @@ Then I'll describe how a radix tree can be generated in JS, and then how searchi
 
 Finally I'll describe some javascript specific issues I had, and how I solved them (event loop blocking)
 
+If you are just interested in the final code, it can be found [here](https://gist.github.com/mroseman95/bfd541d4ec98ddcd83f3845c31a69400)
+
 ## Prefix Trees
 
 <div class="side-by-side">
@@ -405,6 +407,7 @@ a given prefix, and then perform a depth first search and the node we end on.
   getWords(prefix) {
     prefix = prefix.toLowerCase();
 
+    let word = '';  // this variable will track the edgeLables as we go, so we know what each word is
     let currentNode = this.root;
 
     // iterate over the characters of the given prefix, following the Radix Tree
@@ -423,6 +426,8 @@ a given prefix, and then perform a depth first search and the node we end on.
           return [];
         }
 
+        // add the selected child's characters to word
+        word = word.concat(currentNode.children[character].edgeLabel);
         // increment i, taking off the edge label's characters
         i += currentNode.children[character].edgeLabel.length - 1;
         // update the current node to the selected child
@@ -449,11 +454,11 @@ those words, so we only need to do a depth first search to find them all.
 {% highlight js %}
     // DFS starting at current node to get all possible words with the given prefix
     let words = [];
-    function dfs(startingNode, prefix) {
+    function dfs(startingNode, word) {
       // if we are currently visitng a node that's a word
       if (startingNode.isWord) {
         // append the given prefix to the running array of words
-        words.push(prefix);
+        words.push(word);
       }
 
       // if there are no child nodes return
@@ -464,11 +469,11 @@ those words, so we only need to do a depth first search to find them all.
       // for each child of the given child node
       for (const character of Object.keys(startingNode.children)) {
         // recursively call dfs on each child, after concating that child's edge label with the given prefix
-        dfs(startingNode.children[character], prefix + startingNode.children[character].edgeLabel);
+        dfs(startingNode.children[character], word.concat(startingNode.children[character].edgeLabel));
       }
     }
 
-    dfs(prefix);
+    dfs(word);
 
     return words;
 {% endhighlight %}
@@ -478,9 +483,98 @@ Finally, We can make the getWords more efficient by making it asynchronous, sinc
 The whole file then will look like.
 
 {% highlight js %}
+class RadixNode {
+  constructor(edgeLabel, isWord=false) {
+    this.edgeLabel = edgeLabel;
+    this.children = {};
+
+    this.isWord = isWord;
+  }
+}
+
+class RadixTree {
+  constructor() {
+    this.root = new RadixNode('');
+  }
+
+  addWord(word) {
+    word = word.toLowerCase();
+
+    let currentNode = this.root;
+
+    // iterate over the characters of the given word
+    for (let i = 0; i < word.length; i++) {
+      const currentCharacter = word[i];
+
+      // check to see if there is a child of the currentNode with an edge label starting with the currentCharacter
+      if (currentCharacter in currentNode.children) {
+        const edgeLabel = currentNode.children[currentCharacter].edgeLabel;
+
+        // get the common prefix of this child's edge label and what's left of the word
+        const commonPrefix = getCommonPrefix(edgeLabel, word.substr(i));
+
+        // if the edge label and what's left of the word are the same
+        if (edgeLabel === word.substr(i)) {
+          // update this child's data with the given data
+          currentNode.children[currentCharacter].isWord = true;
+
+          return;
+        }
+
+        // if the edge label contains the entirety of what's left of the word plus some extra
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length === word.substr(i).length) {
+          // insert a new node (that's the new word) between the current node and the child, splitting up the edge label
+          const newNode = new RadixNode(word.substr(i), true);
+
+          // move the child so it's a child of the new node instead of the current node
+          newNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[currentCharacter]
+
+          // make the edge label between the new node and it's child what's left of the edge label
+          newNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
+
+          // make the new node a child of current node
+          currentNode.children[currentCharacter] = newNode;
+
+          return;
+        }
+
+        // if the edge label and what's left of the word share a common prefix, but differ at some point
+        if (commonPrefix.length < edgeLabel.length && commonPrefix.length < word.substr(i).length) {
+          // insert a new inbetween node between current node and it's child, that will have children for the old child and a new node for the given word.
+          const inbetweenNode = new RadixNode(commonPrefix);
+
+          // move the child so it's a child of the inbetween node instead of the current node
+          inbetweenNode.children[edgeLabel[commonPrefix.length]] = currentNode.children[currentCharacter]
+
+          // make the edge label between the inbetween node and the child what's left of the edge label
+          inbetweenNode.children[edgeLabel[commonPrefix.length]].edgeLabel = edgeLabel.substr(commonPrefix.length);
+
+          // replace the child with the new inbetween node as a child of the current node
+          currentNode.children[currentCharacter] = inbetweenNode;
+
+          // add what's left of the word as another child for the inbetween node
+          inbetweenNode.children[word.substr(i)[commonPrefix.length]] = new RadixNode(word.substr(i + commonPrefix.length), true);
+
+          return;
+        }
+
+        // the last option is what's left of the word contains the entirety of the edge label plus some extra
+        // follow the edge, and take off all the characters the edge has
+        i += edgeLabel.length - 1;
+        currentNode = currentNode.children[currentCharacter];
+      } else {
+        const newNode = new RadixNode(word.substr(i), true);
+        currentNode.children[currentCharacter] = newNode;
+
+        return;
+      }
+    }
+  }
+
   async getWords(prefix) {
     prefix = prefix.toLowerCase();
 
+    let word = '';
     let currentNode = this.root;
 
     // iterate over the characters of the given prefix, following the Radix Tree
@@ -499,6 +593,8 @@ The whole file then will look like.
           return [];
         }
 
+        // add the selected child's characters to word
+        word = word.concat(currentNode.children[character].edgeLabel);
         // increment i, taking off the edge label's characters
         i += currentNode.children[character].edgeLabel.length - 1;
         // update the current node to the selected child
@@ -512,11 +608,11 @@ The whole file then will look like.
 
     // DFS starting at current node to get all possible words with the given prefix
     let words = [];
-    async function dfs(startingNode, prefix) {
+    async function dfs(startingNode, word) {
       // if we are currently visitng a node that's a word
       if (startingNode.isWord) {
         // append the given prefix to the running array of words
-        words.push(prefix);
+        words.push(word);
       }
 
       // if there are no child nodes return
@@ -527,20 +623,89 @@ The whole file then will look like.
       // for each child of the given child node
       for (const character of Object.keys(startingNode.children)) {
         // recursively call dfs on each child, after concating that child's edge label with the given prefix
-        await dfs(startingNode.children[character], prefix + startingNode.children[character].edgeLabel);
+        await dfs(startingNode.children[character], word.concat(startingNode.children[character].edgeLabel));
       }
     }
 
-    await dfs(prefix);
+    await dfs(currentNode, word);
 
     return words;
   }
+}
+
+/*
+ * getCommonPrefix calculates the largest common prefix of two given strings
+ */
+function getCommonPrefix(a, b) {
+  let commonPrefix = '';
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] !== b[i]) {
+      return commonPrefix;
+    }
+
+    commonPrefix += a[i];
+  }
+
+  return commonPrefix;
 }
 {% endhighlight %}
 
 And if we run it...
 
-{% highlight bash %}
+{% highlight js %}
+let radixTree = new RadixTree();
+
+radixTree.addWord('facebook');
+radixTree.addWord('fantastic');
+radixTree.addWord('cantalope');
+radixTree.addWord('zebra');
+radixTree.addWord('keyboard');
+radixTree.getWords('f').then(words => {
+  console.log(`words with prefix 'f': ${words.join(', ')}`);
+});
+radixTree.getWords('fan').then(words => {
+  console.log(`words with prefix 'fan': ${words.join(', ')}`);
+});
+radixTree.getWords('').then(words => {
+  console.log(`all words: ${words.join(', ')}`);
+});
+{% endhighlight %}
+
+We'll get the output...
+
+{% highlight js %}
+words with prefix 'fan': fantastic
+words with prefix 'f': facebook, fantastic
+all words: facebook, fantastic, cantalope, zebra, keyboard
 {% endhighlight %}
 
 ## Event Loop Blocking
+
+When I was implementing this code, I was building an Express endpoint that would take a prefix a user had typed and return autocomplete suggestions for movie titles.
+
+There are a little over 500,000 movie titles according to IMDb, and that's a lot of words to fill a Radix Tree. Luckily it was very fast except in a few edgecases.
+
+If the prefix was only one or two characters, or was the beginning of 'the ' (lots of movie titles start with 'the '), the tree that was searched using depth first search was particularly big, and took up to a few seconds.
+
+It turned out that my code was blocking the event loop. This was noticable because as a user typed the first character would trigger a search and block the event loop, preventing the next search once the user had typed more characters.
+
+The solution to this wasn't that complicated, I simply had to use node's setImmediate function to tell the getWords function to allow the event loop to continue, freeing up other asyncronous code (in this case Express).
+
+To start, I'll use Node's promisify function to make setImmediate easier to use.
+
+{% highlight js %}
+const util = require('util');
+const setImmediatePromise = util.promisify(setImmediate);
+{% endhighlight %}
+
+Reight before the recursive call to the dfs function, we can await the setImmediate function.
+
+{% highlight js %}
+await setImmediatePromise()
+await dfs(startingNode.children[character], word.concat(startingNode.children[character].edgeLabel));
+{% endhighlight %}
+
+This will make each recursive call happen on the next event loop iteration. Thus allowing other asyncronous code to be able to execute.
+
+This will slow the getWords function down a bit, so I ended up only awaiting the setImmediate call on prefixes I could predict being expensive (the edge cases I describe above).
+But that's a decision that will have to be made depending on the needs of your code.
