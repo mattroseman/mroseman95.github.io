@@ -16,7 +16,7 @@ resume: true
 resume-external: false
 resume-url: /assets/resume.pdf
 
-url: https://mroseman95.github.io
+url: https://mattroseman.github.io
 # your url: http://USERNAME.github.io
 
 permalink: /:title/
@@ -42,7 +42,7 @@ twitter: mattroseman
 # linkedin: mylinkedin
 # youtube: myyoutube
 # spotify: myspotify
-github: mroseman95
+github: mattroseman
 # lastfm: mylastfm
 # stackoverflow: 7044681/mystackoverflow
 # quora: userquora

@@ -1,0 +1,24 @@
+---
+version: "3.5"
+
+services:
+  blog:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: blog:local
+    container_name: blog
+    command: bash -c "bundle exec jekyll serve --config _config.yml,_config-dev.yml -H 0.0.0.0 --watch --drafts"
+    volumes:
+      - ./about.md:/usr/src/app/about.md
+      - ./robots.txt:/usr/src/app/robots.txt
+      - ./_drafts:/usr/src/app/_drafts
+      - ./_includes:/usr/src/app/_includes
+      - ./_layouts:/usr/src/app/_layouts
+      - ./_posts:/usr/src/app/_posts
+      - ./_sass:/usr/src/app/_sass
+      - ./_site:/usr/src/app/_site
+      - ./assets:/usr/src/app/assets
+      - ./blog:/usr/src/app/blog
+    ports:
+      - 4000:4000
