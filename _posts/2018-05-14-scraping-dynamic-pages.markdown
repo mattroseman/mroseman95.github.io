@@ -19,7 +19,7 @@ description: How to integrate Selenium into Scrapy to scrape dynamic web pages
 If you already know how to set up Scrapy and Selenium, skip to the [Integration](#integration) section to see how to
 integrate the two.
 
-The final code can be viewed [here](https://github.com/mroseman95/twitch-featured-scraper).
+The final code can be viewed [here](https://github.com/mattroseman/twitch-featured-scraper).
 
 ### Contents
 - [Overview](#overview)

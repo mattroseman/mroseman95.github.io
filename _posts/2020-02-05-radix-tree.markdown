@@ -33,7 +33,7 @@ Then I'll describe how a radix tree can be generated in JS, and then how searchi
 
 Finally I'll describe some javascript specific issues I had, and how I solved them (event loop blocking)
 
-If you are just interested in the final code, it can be found [here](https://gist.github.com/mroseman95/bfd541d4ec98ddcd83f3845c31a69400)
+If you are just interested in the final code, it can be found [here](https://gist.github.com/mattroseman/bfd541d4ec98ddcd83f3845c31a69400)
 
 ## Prefix Trees
 
